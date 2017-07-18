@@ -43,12 +43,7 @@ function per_char()
   else
     export hero=$1
   fi
-  echo "$1 dialogues are:"
-  infile=${inputfile}
-
-  echo "gawk '/^$hero$/ {while(length(\$0)>0) {getline; print}}' $infile" > ./run_tmp_grep.sh
-  . ./run_tmp_grep.sh
-  rm -f ./run_tmp_grep.sh
+  echo "Please e-mail me for full version :):"
 }
 
 # Prints longer than five lines dialogs
