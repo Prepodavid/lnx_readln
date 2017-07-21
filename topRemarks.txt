@@ -1,0 +1,65 @@
+Krassimir K (Mr)
+
+That Python, Java and C# have "long ago" overtaken the "first place" of introduction to programming languages is quite true, yet there are plenty of systems that are still using C. The amount of C code is growing every week.
+
+The amount of C/C++ code worldwide is not shrinking. Coding for embedded devices, OS kernels - Linux, Windows, Mac to name a few, real time OS, proprietary Unix systems and manufacturing industry applications, where speed really matters beyond the unpredictability of "heap garbage collection systems"... Ops, you may not want some library calls to fail quite badly with the next release of an enthusiastic version of a code interpreter? Please, do not ignore or forget that even the latest Java and Python interpreter are written largely in C, same story with the "Java world tools" - whether the javac compiler-to-byte-code or the runtime environment. At the end of the day, one can easily find carriage return symbols in Linux shell scripts - open source. Maybe at some point in the future the Unix shells will accept them like a legitimate symbol and won't fail anymore :)
+
+Some of the PHP, Python, Java education pitfalls, if a developer has to switch even temporarily from any of those into a "bare to the metal" language like C, even for one project.
+
+In Python, PHP one does not need to provide any function prototypes, and coding with classes is not mandatory all the time. In Java one does not need to write function prototypes - it might seem an outdated methodology, people even complain about it. OK - if you complain about prototypes, please never touch a C/C++ project.
+
+A popular question: Is C a strongly typed language? My answer is: it is a typed language for sure (!?!) and my advice is - one should better approach it like a strongly typed language! Indeed, there are incredible possibilities to kind of "bypass" the types mechanisms in C. The outcome is: errors, frustration and more expenses.
+
+One example on types in C. If you skip the return type of a function in C, then its type is int. That is right - integer. It is not void, or "non-typed". Now, imagine you know the data type of a function, yet you do not provide a header file or a prototype within the source code. Then it is of type "int" for the compiler. 
+
+Provide prototypes to the compiler. If some C compiler has been designed to somehow find the correct function type just because its definition is somewhere within the same source file - you are playing a dangerous game against portability!
+
+Pointers in C/C++ have a data type. That is right. Even though C allows a universal pointer type "void", pointers have a type and each pointer takes some memory.
+
+On 32-bit systems, C pointers have 32 bit values, and on 64 bit systems, C pointers have 64 bit values. Imagine a C function that returns a pointer yet it has no prototype. Then on a 32 bit system, by default the C compiler assumes it is an int function, and the C int type on 32 and 64 systems takes 32 bits - the wide usage of int has "enforced" C compiler designers not to take risks by modifying int - although it's not a 100% guarantee. The point is, on a 32 bit system - int and pointer type is the same size. You forgot to provide a prototype, yet the assumption works OK.
+
+Now you have to compile that same code on a 64 bit platform. The C program is compiled, maybe with a few warnings here and there, depending on what warnings got enabled. Then you run a test and here we go - the program crashes. You are lucky if you or the test team managed to get the error before it hit production.
+
+So what happened - nothing changed and the code suddenly crashes!? Well, actually something changed - you are working in a 64 bit environment, therefore pointers are 64 bit. That function without a prototype should return a 64 bit value. Considering the missing prototype, the compiler did its job by assuming its an int type function - sure a 32 bit on a 64 bit system - and here we go! Your function passed a true 64 bit value pointer to its caller by implicitly converting it into a 32 bit value!?! What happens is a 64 bit value is truncated into a much smaller values and regardless how "small" that modification might be, it is a WRONG address for sure.
+
+Now you tell me - is C a strongly typed language?! Please do not get confused - C provides you plenty of freedom and flexibility to downplay the type restrictions - at the end of the day your boss expects quality code done on time. If you skip the function (proto)type, the compiler decides for you and it may take a different decision than your assumption. No, the compiler does not take a wrong decision - I am afraid it's the programmer who skipped some steps...
+
+Therefore - don't copy and paste that explanation to your boss. One line prototype will do. How about program optimization, like I/O optimization? A decent advice is - finish your program, then run tools to determine bottlenecks and then consider optimization - I agree.
+
+The topic of prototypes can become even more interesting when one has to integrate some C code with C++, or C code with functions written in other procedural languages. That article is not meant to be a complete book. In the database world, a query can be "optimized" to run from several hours down to less than 1 minute. Using the same logic in the C/C++ world has its cost. Please, simply because someone wrote in a book about I/O minimization in order to speed up programs, how do you know that advice was not from 2 decades ago when floppy disk I/O was slow and HDD access for 1MB was not any joke ?!
+
+Please - do not play with optimization in C code. Chances are 80% of the time it is a waste of time, and the rest is quite dangerous. OK - I am talking everyday code, not arbitrage trading special algo that split the second a million times. I have worked on "optimizing" code. Once it was per request from senior folks on the team - it was required to replace a Unix system call where a sed expression generated the answer, with "genuine C code". It took me some 30-40 of coding to spare less than a second in a program that runs in batch less than 6 times a week. OK - system calls and external tools might cause potential "race" conditions when talking about Web servers or Network interfacing applications. That was not the case for an in-house batch program, though. So, Not a key benefit - the great point is - I had a solution using a sed expression - worse comes to worst, if the C algorithm wouldn't work or I could not it done on time - I could still get back to the ready and working "non-perfect as expected" solution. Another time I profiled the application and since 90% of the time was Oracle database SQL queries I/O - I did not modify anything in the Pro*C functions that I wrote.
+
+Image a situation like this: you want to printf("Hi") 2000 times! Maybe create a buffer, strNcat the "Hi\n" 2000 times and finally printf/write it once!! Sounds like "optimized I/O" :)
+
+Chances are - you're wasting time. Even though strNcat might work faster than printf() due to the type conversion, the C compiler can optimize the I/O - it simply takes those printf output strings, writes them into buffers of 4K and it is only those 4K full buffers that are written to stdout, or the respective output stream. It is simple to validate - run a test through the system trace (strace) utility.
+
+Actually, I have literally written test code to double-check some magazine advice. I've noticed statements like: "malloc is faster than calloc". Really? So I called malloc and free millions of times, then calloc and free millions of times. The timings were about the same on gcc -O2 binary. Obviously if all one is doing is to allocation the same number of bytes millions of times and the program stack does not get modified in the meantime, the compiler is doing an excellent optimization job.
+
+I still don't get it, why is computing literature providing all that propaganda-like enthusiasm on "code optimization" when we know for sure that for some profitable 3D games they are using tools that generate hundreds of thousands of C++ code and it turns out - that code later requires a few more months for the next super-fast processor to be able to run it in real time multi-player game?!
+
+Actually, an even better "optimization" example is the Linux kernel. On older hardware (machines) earlier Linux kernels might be actually running faster. However, they may have security issues that one would definitely prefer to avoid - therefore, forget about that performance advantage and use the more secure version... Yet, written job requirements like "optimized for performance" code is even in the job-role descriptions from time to time. Why not tell developers - "all we need is decent quality code on xyz platform" ?!?
+
+-------------------------------------------------------
+
+Q1. Why is IT support quite difficult? That's a tiny fraction of the topic.
+
+It costs: time and money - a bag of banknotes placed next to a server does not solve any outstanding problem. Maybe suggest it like a team reward - that would you encourage practices where bad code makes it to production and then encourage fixes via sort-of-bribing?! I mean support costs both time and money, not like time in "time is money" so IT support costs money times two. Yet in a way it really costs money times two - a piece of code may require two-three times more time in hours to fix than coding in the first place.
+
+IT support does not bring in any additional, any bonus revenue. Yet it is keeping you from bankruptcy - if customers flee due to poor quality, or any lack of support?! One may have a contract that the client pays for IT support: fixed price for a contracted base functionality. If the price of error exceeds that subscription the client does not pay a penny - it is a risk for the company both in terms of costs and in terms of reputation. Especially for a new "market-unknown" product with not that many customers.
+
+Without those "error-generating production" things the company IT resources could be improving or coding new programs that would bring in revenue. Support is sort of technical debt. It does not make the balance sheet look better - managers are aware of all support problems and know they won't make them any richer. One example: someone, maybe a contractor who left month ago, worked on modifications of a program. The changes were tested, approved and went into production and yet that "third party" resource did not register the code in the version control system?! Someone new joins the team and they virtually get trapped - they assume VCS is perfect, they do not have the correct code readily available yet the functionality is available to the client ?! How would someone maintain a program starting with the incorrect version?!
+
+An example where hiring even the best graduates from the best colleges may not help much to boost one's business.
+
+Reverse engineering is a very tiny segment of the market and nobody would hire a "reverse engineering specialist" for IT support.
+
+That sort of problem solving does not bring in any revenue - it could rather destroy a business relationship with a client!
+
+When one has to invest money in training - that does not bring in new revenue immediately. Yet it costs and I am not sure if it's a deductible business expense for in-house training. I am glad I did not mention a word on technicalities, e.g. Unix, networking, network security.
+
+Q2. Why is IT support quite difficult yet it does not pay much?
+
+I believe the answer was given already above: one company has a budget for support and it cannot afford more. Support does not bring in much revenue, if any. If you ask me a question: why do support people have to write new programs and yet get paid a "support salary" - I am not quite familiar. For sure it comes down to budget, taxes, profits and really, morality.
+
+Any questions are welcome. Comments - please refer to your publications first :)
